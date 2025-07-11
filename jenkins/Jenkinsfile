@@ -1,0 +1,35 @@
+pipeline {
+   agent any
+
+   environment {
+       name : "data-service-application",
+       DOCKER_HUB : ""
+       IMAGE_NAME = "yourdockerhub/data-service"
+   }
+
+   stages : {
+        stages('Checkout') {
+             steps {
+                sh "git"
+             }
+        },
+        stages('Build') {
+             steps {
+                sh 'mvn clean package -DskipTests'
+             }
+        },
+        stages('Docker Build & Push') {
+            steps {
+                script {
+                        docker.build("${IMAGE_NAME}:${BUILD_NUMBER}")
+                              .push("${BUILD_NUMBER}")
+                     }
+            }
+        },
+        stages('k8 deployment') {
+             steps {
+                        sh 'kubectl apply -f k8s/'
+             }
+        }
+   }
+}
